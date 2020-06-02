@@ -1,14 +1,7 @@
-from keras import backend as T
-from keras.engine.topology import Layer
 import tensorflow as tf
-import numpy as np
+import tensorflow.keras.backend as T
+from tensorflow.keras.layers import Layer
 
-
-def my_eigen(x):
-    return np.linalg.eigh(x)
-
-def my_svd(x):
-    return np.linalg.svd(x, compute_uv=False)
 
 class CCA(Layer):
     '''CCA layer is used compute the CCA objective
@@ -63,8 +56,8 @@ class CCA(Layer):
         SigmaHat22 = partition2 * tf.matmul(H2bar, tf.transpose(H2bar)) + r2 * tf.eye(o2)
 
         # calculate the root inverse of covariance matrices by using eigen decomposition
-        [D1, V1] = tf.py_func(my_eigen, [SigmaHat11], [tf.float32, tf.float32])
-        [D2, V2] = tf.py_func(my_eigen, [SigmaHat22], [tf.float32, tf.float32])
+        D1, V1 = tf.linalg.eigh(SigmaHat11)
+        D2, V2 = tf.linalg.eigh(SigmaHat22)
 
         # for stability
         D1_indices = tf.where(D1 > eps)
@@ -78,20 +71,22 @@ class CCA(Layer):
         D2 = tf.gather(D2, D2_indices)
 
         pow_value = tf.constant([-0.5])
-        SigmaHat11RootInv = tf.matmul(tf.matmul(V1, tf.diag(tf.pow(D1, pow_value))), tf.transpose(V1))
-        SigmaHat22RootInv = tf.matmul(tf.matmul(V2, tf.diag(tf.pow(D2, pow_value))), tf.transpose(V2))
+        SigmaHat11RootInv = tf.matmul(tf.matmul(V1, tf.linalg.diag(tf.pow(D1, pow_value))), tf.transpose(V1))
+        SigmaHat22RootInv = tf.matmul(tf.matmul(V2, tf.linalg.diag(tf.pow(D2, pow_value))), tf.transpose(V2))
 
         Tval = tf.matmul(tf.matmul(SigmaHat11RootInv, SigmaHat12), SigmaHat22RootInv)
 
         if self.use_all_singular_values:
             # all singular values are used to calculate the correlation
-            corr = tf.trace(T.sqrt(tf.matmul(tf.transpose(Tval), Tval)))
+            corr = tf.linalg.trace(T.sqrt(tf.matmul(tf.transpose(Tval), Tval)))
         else:
             # just the top outdim_size singular values are used
             TT = tf.matmul(tf.transpose(Tval), Tval)
-            U, V = tf.self_adjoint_eig(TT)
+            U, V = tf.raw_ops.SelfAdjointEigV2(TT)
             U_sort, _ = tf.nn.top_k(U, self.cca_space_dim)
             corr = T.sum(T.sqrt(U_sort))
+
+        corr = tf.fill([tf.shape(x)[0], self.output_dim], corr)
 
         return -corr
 

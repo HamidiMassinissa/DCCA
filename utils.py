@@ -4,12 +4,14 @@ import gzip
 from sklearn import svm
 from sklearn.metrics import accuracy_score
 import numpy as np
+from tensorflow.keras.utils import get_file
 
 
-def load_data(data_file):
+def load_data(data_file, url):
     """loads the data from the gzip pickled files, and converts to numpy arrays"""
     print('loading data ...')
-    f = gzip.open(data_file, 'rb')
+    path = get_file(data_file, origin=url)
+    f = gzip.open(path, 'rb')
     train_set, valid_set, test_set = load_pickle(f)
     f.close()
 

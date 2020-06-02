@@ -1,17 +1,12 @@
-import sys
-sys.path.append('/home/hudi/anaconda2/lib/python2.7/site-packages/h5py')
-sys.path.append('/home/hudi/anaconda2/lib/python2.7/site-packages/Keras-2.0.6-py2.7.egg')
-
-try:
-    import cPickle as thepickle
-except ImportError:
-    import _pickle as thepickle
-
 import numpy as np
 from utils import load_data, svm_classify
-from keras.models import Model
-import keras.backend as K
-from keras.layers import Merge, Input, Dense, concatenate, Dropout
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Input, Dense, concatenate, Dropout
+import tensorflow.keras.backend as K
+
 from cca_layer import CCA
 
 def constant_loss(y_true, y_pred):
@@ -31,8 +26,8 @@ if __name__ == '__main__':
     batch_size = 1000
 
     #load data
-    data1 = load_data('noisymnist_view1.gz')
-    data2 = load_data('noisymnist_view2.gz')
+    data1 = load_data('noisymnist_view1.gz', 'https://www2.cs.uic.edu/~vnoroozi/noisy-mnist/noisymnist_view1.gz')
+    data2 = load_data('noisymnist_view2.gz', 'https://www2.cs.uic.edu/~vnoroozi/noisy-mnist/noisymnist_view2.gz')
 
     train_set_x1, train_set_y1 = data1[0]
     valid_set_x1, valid_set_y1 = data1[1]
