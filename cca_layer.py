@@ -82,7 +82,7 @@ class CCA(Layer):
         else:
             # just the top outdim_size singular values are used
             TT = tf.matmul(tf.transpose(Tval), Tval)
-            U, V = tf.raw_ops.SelfAdjointEigV2(TT)
+            U, V = tf.raw_ops.SelfAdjointEigV2(input=TT)
             U_sort, _ = tf.nn.top_k(U, self.cca_space_dim)
             corr = T.sum(T.sqrt(U_sort))
 
